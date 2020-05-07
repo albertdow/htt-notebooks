@@ -1,0 +1,152 @@
+mt: 
+    jetFakes: 
+        - jetFakes
+        - Wfakes
+    TT: 
+        - TTT
+    Electroweak: 
+        - VVT
+        - W
+    ZTT: 
+        - ZTT
+        - EWKZ
+    ZMM: 
+        - ZL
+    H_sm:
+        - ggH_sm_htt
+        - qqH_sm_htt
+        - ZH_sm_htt
+        - WH_sm_htt
+        - ggH_sm_htt125
+        - qqH_sm_htt125
+        - ZH_sm_htt125
+        - WH_sm_htt125
+    H_ps:
+        - ggH_ps_htt
+        - qqH_ps_htt
+        - ZH_ps_htt
+        - WH_ps_htt
+        - ggH_ps_htt125
+        - qqH_ps_htt125
+        - ZH_ps_htt125
+        - WH_ps_htt125
+
+et: 
+    jetFakes:
+        - jetFakes
+        - Wfakes
+    TT: 
+        - TTT
+    Electroweak: 
+        - VVT
+        - W
+    ZTT: 
+        - ZTT
+        - EWKZ
+    ZEE: 
+        - ZL
+
+tt:
+    jetFakes: 
+        - jetFakes
+        - Wfakes
+    TT: 
+        - TTT
+    Electroweak: 
+        - VVT
+        - ZL
+    ZTT: 
+        - ZTT
+        - EWKZ
+    #ggH:
+    #    - ggH_sm_htt125
+    #qqH:
+    #    - qqH_sm_htt125
+    #VH:
+    #    - ZH_sm_htt125
+    #    - WH_sm_htt125
+    H_sm:
+        - ggH_sm_htt
+        - qqH_sm_htt
+        - ZH_sm_htt
+        - WH_sm_htt
+        - ggH_sm_htt125
+        - qqH_sm_htt125
+        - ZH_sm_htt125
+        - WH_sm_htt125
+    H_ps:
+        - ggH_ps_htt
+        - qqH_ps_htt
+        - ZH_ps_htt
+        - WH_ps_htt
+        - ggH_ps_htt125
+        - qqH_ps_htt125
+        - ZH_ps_htt125
+        - WH_ps_htt125
+
+em:
+    QCD: 
+        - QCD
+    TT: 
+        - TTT
+        - TTJ
+    Electroweak: 
+        - VVT
+        - VVJ 
+        - W
+    ZTT: 
+        - ZTT
+        - EWKZ
+    ZLL: 
+        - ZLL
+
+zmm: 
+    Backgrounds: 
+        - QCD
+        - TTT
+        - TTJ
+        - VVT
+        - VVJ
+        - W
+        - ZTT
+    #QCD: 
+    #    - QCD
+    #TT: 
+    #    - TTT
+    #    - TTJ
+    #Electroweak: 
+    #    - VVT
+    #    - VVJ
+    #    - W
+    #ZTT: 
+    #    - ZTT
+    ZMM: 
+        - ZL
+        - ZJ
+        - EWKZ
+
+zee: 
+    Backgrounds: 
+        - QCD
+        - TTT
+        - TTJ
+        - VVT
+        - VVJ
+        - W
+        - ZTT
+    #QCD: 
+    #    - QCD
+    #TT: 
+    #    - TTT
+    #    - TTJ
+    #Electroweak: 
+    #    - VVT
+    #    - VVJ
+    #    - W
+    #ZTT: 
+    #    - ZTT
+    ZEE: 
+        - ZL
+        - ZJ
+        - EWKZ
+

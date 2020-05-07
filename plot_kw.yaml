@@ -1,0 +1,128 @@
+mt: 
+    QCD: 
+        - QCD
+    TT: 
+        - TTT
+        - TTJ
+    Electroweak: 
+        - VVT
+        - VVJ 
+        - W
+    ZTT: 
+        - ZTT
+        - EWKZ
+    ZMM: 
+        - ZL
+        - ZJ
+
+et: 
+    QCD: 
+        - QCD
+    TT: 
+        - TTT
+        - TTJ
+    Electroweak: 
+        - VVT
+        - VVJ 
+        - W
+    ZTT: 
+        - ZTT
+        - EWKZ
+    ZEE: 
+        - ZL
+        - ZJ
+
+tt:
+    QCD: 
+        - QCD
+    TT: 
+        - TTT
+        - TTJ
+    Electroweak: 
+        - VVT
+        - VVJ 
+        - W
+        - ZL
+        - ZJ
+    #Minors:
+    #    - TTT
+    #    - TTJ
+    #    - VVT
+    #    - VVJ 
+    #    - W
+    #    - ZL
+    #    - ZJ
+    ZTT: 
+        - ZTT
+        - EWKZ
+    ggH:
+        - ggH_sm_htt125
+    qqH:
+        - qqH_sm_htt125
+
+em:
+    QCD: 
+        - QCD
+    TT: 
+        - TTT
+        - TTJ
+    Electroweak: 
+        - VVT
+        - VVJ 
+        - W
+    ZTT: 
+        - ZTT
+        - EWKZ
+    ZLL: 
+        - ZLL
+
+zmm: 
+    #Backgrounds: 
+    #    - QCD
+    #    - TTT
+    #    - TTJ
+    #    - VVT
+    #    - VVJ
+    #    - W
+    #    - ZTT
+    QCD: 
+        - QCD
+    TT: 
+        - TTT
+        - TTJ
+    Electroweak: 
+        - VVT
+        - VVJ
+        - W
+    ZTT: 
+        - ZTT
+    ZMM: 
+        - ZL
+        - ZJ
+        - EWKZ
+
+zee: 
+    Backgrounds: 
+        - QCD
+        - TTT
+        - TTJ
+        - VVT
+        - VVJ
+        - W
+        - ZTT
+    #QCD: 
+    #    - QCD
+    #TT: 
+    #    - TTT
+    #    - TTJ
+    #Electroweak: 
+    #    - VVT
+    #    - VVJ
+    #    - W
+    #ZTT: 
+    #    - ZTT
+    ZEE: 
+        - ZL
+        - ZJ
+        - EWKZ
+
