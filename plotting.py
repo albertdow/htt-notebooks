@@ -43,6 +43,8 @@ def create_df(
         bin_edges = hist.edges
         nbins = hist.numbins
         weights = hist.values
+        weights_down = np.zeros_like(weights)
+        weights_up = np.zeros_like(weights)
         variance = hist.variances
         variance_down = np.zeros_like(variance)
         variance_up = np.zeros_like(variance)
@@ -50,7 +52,7 @@ def create_df(
         syst_variance_down = np.zeros_like(variance)
         syst_variance_up = np.zeros_like(variance)
         
-        skip_variation = ["data_obs", "ggH_sm_htt125", "qqH_sm_htt125", "ZH_sm_htt125", "WH_sm_htt125",]
+        skip_variation = ["data_obs"]#, "ggH_sm_htt125", "qqH_sm_htt125", "ZH_sm_htt125", "WH_sm_htt125",]
         if len(variations) > 0 and process not in skip_variation:
             for variation in variations:
                 try:
@@ -58,6 +60,8 @@ def create_df(
                     process_up = f"{process}_{variation}Up"
                     hist_down = _file["{}/{}".format(directory, process_down)]
                     hist_up = _file["{}/{}".format(directory, process_up)]
+                    weights_down = hist_down.values
+                    weights_up = hist_up.values
                     variance_down = (hist_down.values - weights)**2
                     variance_up = (hist_up.values - weights)**2
                 except KeyError:
@@ -73,6 +77,8 @@ def create_df(
             "binvar0": bin_edges[:-1],
             "binvar1": bin_edges[1:],
             "sum_w": weights,
+            "sum_w_up": weights_up,
+            "sum_w_down": weights_down,
             "sum_ww": variance, # stat uncertainty from nominal template
             "sum_ww_down": syst_variance_down+variance, # syst uncertainty down + stat (assumed Gaussian)
             "sum_ww_up": syst_variance_up+variance, # syst uncertainty up + stat (assumed Gaussian)
@@ -99,6 +105,21 @@ def add_axis(ax):
         d, (0.5, 1), (5, -5),
         xycoords="axes fraction", textcoords="offset points",
         va="top", ha="center"
+    )
+    
+def custom_cms_label(ax, label, lumi=35.9, energy=13, extra_label=''):
+    ax.text(
+        0, 1, r'$\mathbf{CMS}\ \mathit{'+label+'}$',
+        ha='left', va='bottom', transform=ax.transAxes,
+    )
+    ax.text(
+        1, 1, r'${:.0f}\ \mathrm{{fb}}^{{-1}}$ ({:.0f} TeV)'.format(lumi, energy),
+        ha='right', va='bottom', transform=ax.transAxes,
+    )
+    # label on centre top of axes
+    ax.text(
+        0.5, 1, extra_label,
+        ha='center', va='bottom', transform=ax.transAxes,
     )
 
 def draw_signal_ratio(ax, df_, sigs=["H_sm", "H_ps",],):
@@ -138,6 +159,7 @@ def draw_1d(
     unrolled=False, nbins=[[4], 14, "inclusive", "inclusive"], mcstat=True,
     sig_ratio=False, norm_bins=False, mcsyst=False,
     mcstat_kw={}, logy=False, postfix="", sm_bkg_ratio=False,
+    combined=False,
 ):
     # to keep the original one the same
     df = df_.copy(deep=True)
@@ -184,19 +206,25 @@ def draw_1d(
         elif year == "2018": 
             lumi = 59.7
         
-        if unrolled:
+        if unrolled and not combined:
             dftools.draw.cms_label(ax[0], "Preliminary", lumi=lumi, extra_label=nbins[2])
-        else:
+        elif not combined:
             dftools.draw.cms_label(ax[0], "Preliminary", lumi=lumi)
+        # for all three years together (assume uncorrelated)
+        elif combined and unrolled: 
+            custom_cms_label(ax[0], "Preliminary", lumi=137, extra_label=nbins[2])
+        else:
+            custom_cms_label(ax[0], "Preliminary", lumi=137)
+            
         
         # to fix when y axis is too large 
         # (scientific notation starts showing up)
         if not unrolled and not logy and (df["sum_w"] > 1e5).any():
-            scale_by_tenthou = True
-            df["sum_w"] = df.eval("sum_w/1e5")
-            df["sum_ww"] = df.eval("sum_ww/(1e5**2)")
-            df["sum_ww_down"] = df.eval("sum_ww_down/(1e5**2)")
-            df["sum_ww_up"] = df.eval("sum_ww_up/(1e5**2)")
+            scale_by_tenthou = False
+            #df["sum_w"] = df.eval("sum_w/1e5")
+            #df["sum_ww"] = df.eval("sum_ww/(1e5**2)")
+            #df["sum_ww_down"] = df.eval("sum_ww_down/(1e5**2)")
+            #df["sum_ww_up"] = df.eval("sum_ww_up/(1e5**2)")
             
         
         data_mask = df.index.get_level_values("parent") != "data_obs"
@@ -210,15 +238,20 @@ def draw_1d(
         sig_mask = ~df_mc.index.get_level_values("parent").isin(sigs)
         df_mc.loc[~sig_mask, "sum_w"] = df_mc.loc[~sig_mask, "sum_w"].copy(deep=True) * signal_scale
         df_mc.loc[~sig_mask, "sum_ww"] = df_mc.loc[~sig_mask, "sum_ww"].copy(deep=True) * signal_scale**2
+        
+        # get maximum bin content to add a legend that doesn't overlap
+        df_bkgs = df_mc.loc[sig_mask, :]
+        df_bkgs_sum = df_bkgs.groupby("binvar0").sum()
             
+        # get max bin values for data and background MC
         ymax = max([
             df_data["sum_w"].max(), 
-            df_mc["sum_w"].max() 
+            df_bkgs_sum["sum_w"].max() 
         ])
         ymc_max = max([
-            df_mc["sum_w"].max(), 
+            df_bkgs_sum["sum_w"].max(), 
         ])
-            
+
         if len(sigs) == 0:
             ymax *= 1.6
         elif len(sigs) > 0 and len(sigs) < 3:
@@ -233,7 +266,7 @@ def draw_1d(
                 ymax *= 1.8
         leg_kw = {
             "offaxis": False, "fontsize": 7, "labelspacing":0.12,
-            "ncol": 2, "loc": 9, "framealpha": 0.6,
+            "ncol": 2, "loc": 9, "framealpha": 0.,
         }
         ratio_leg_kw = {
             "fontsize": 7, "labelspacing":0.12,
@@ -281,16 +314,19 @@ def draw_1d(
         if not unrolled:
             if not logy:
                 ax[0].set_ylim(0., ymax)
-            else: 
-                ax[0].set_ylim(1e1, ymc_max*1e3)
-                
-            if blind:
+            elif logy:
+                ax[0].set_ylim(1e-1, ymc_max*1e4)
+            elif logy and channel == "tt": 
+                ax[0].set_ylim(1e-1, ymc_max*1e4)
+            elif logy and channel == "mt": 
+                ax[0].set_ylim(1e-1, ymc_max*1e6)
+            elif blind:
                 ax[0].set_ylim(0., ymc_max*2.)
         ax[0].set_ylabel(r'Events')
-        if norm_bins and scale_by_tenthou:
-            ax[0].set_ylabel(r'$\times 10^5\ \mathrm{Events}\ /\ \mathrm{Bin}$')
-        elif norm_bins:
-            ax[0].set_ylabel(r'Events / Bin')
+        #if norm_bins and scale_by_tenthou:
+        #    ax[0].set_ylabel(r'$\times 10^5\ \mathrm{Events}\ /\ \mathrm{bin}$')
+        if norm_bins:
+            ax[0].set_ylabel(r'Events/Bin')
         #ax[1].set_ylabel(r'Ratio')
         ax[1].set_ylabel(r'Data/Bkg.')
         
@@ -354,7 +390,7 @@ def draw_1d(
                 ax[2].set_yticks([0.5, 1.0, 1.5])
             #ax[2].set_yticks([0.5, 0.75, 1., 1.25, 1.5])
             #ax[2].set_ylabel(r'Ratio')
-            ax[2].set_ylabel(r'Signal/SM')
+            ax[2].set_ylabel(r'Sig./SM')
             
             if unrolled:
                 ax[2].vlines(vert_lines, *ax[0].get_ylim(), linestyles='--', colors='black', zorder=1)
@@ -385,7 +421,14 @@ def draw_1d(
 
         ax[1].set_yticks([0.6, 0.8, 1., 1.2, 1.4])
         ax[1].set_ylim(0.6, 1.4)
+        # temporarily rebin for ptmiss
+        if plot_var in ['met']:
+            ax[1].set_xlim(0, 100)
         #ax[1].set_ylim(0., 2.)
+        #ax[1].set_yticks([0., 0.5, 1., 1.5, 2.])
+        # for zmm noise jet
+        #ax[1].set_ylim(0., 2.5)
+        #ax[1].set_yticks([0., 0.5, 1., 1.5, 2., 2.5])
         if unrolled:
             ax[1].set_ylim(0., 2.)
             ax[1].set_yticks([0., 0.5, 1., 1.5, 2.])
@@ -433,6 +476,7 @@ var_kw = {
     "met": r'$p_{\mathrm{T}}^{\mathrm{miss}} (\mathrm{GeV})$',
     "residual_pt": r'$(\vec{p}_{\mathrm{MET}} + \vec{p}_\mathrm{jet} + \vec{p}_\mathrm{Z})_{\mathrm{T}}\ (\mathrm{GeV})$',
     "IC_15Mar2020_max_score": r'BDT score',
+    "IC_11May2020_max_score": r'BDT score',
     "NN_score": r'NN score',
     "Bin_number": r'Bin number',
     "jmva_1": r'PU jet ID',
@@ -465,18 +509,26 @@ process_kw={
         "SMTotal": 'black', 
         "Backgrounds": "#d9d9d9", 
         "Minors": "#d9d9d9",
-        "ZL": "#64C0E8",
+        #"ZL": "#64C0E8",
+        "ZL": "#93C6D6",
         "QCD": "#ffb8c9",
-        "TT": "#9B98CC",
-        "Electroweak": "#DE5A6A",
-        "ZTT": "#E8AD46",
-        "ZMM": "#64C0E8",
+        #"TT": "#9B98CC",
+        "TT": "#C9AEED",
+        #"Electroweak": "#DE5A6A",
+        "Electroweak": "#fb8072",
+        #"ZTT": "#E8AD46",
+        "ZTT": "#fdb462",
+        #"ZMM": "#64C0E8",
+        "ZMM": "#93C6D6",
         "ZEE": "#64C0E8",
         "jetFakes": "#addd8e",
-        "EmbedZTT": "#E8AD46",
-        "ggH": "#ef3b2c",
+        #"EmbedZTT": "#E8AD46",
+        "EmbedZTT": "#fdb462", 
+        #"ggH": "#ef3b2c",
+        "ggH": "#BB4D00",
         "qqH": "#2171b5",
-        "VH": "#c994c7",
+        #"VH": "#c994c7",
+        "VH": "#82AEB1",
         #"H_sm": "#4292c6",
         "H_sm": "#253494", # dark blue
         #"H_ps": "#2ca25f", # dark green
